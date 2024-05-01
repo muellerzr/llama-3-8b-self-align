@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import asyncio
 import json
 import os
@@ -11,6 +13,7 @@ from typing import Any, Literal, cast
 from datasets import Dataset, load_dataset
 from tqdm.auto import tqdm
 from transformers import HfArgumentParser
+
 
 import star_align
 

@@ -182,10 +182,10 @@ def coerce_integer(df):
 def prompt_fmt(code):
     doc, code = py_extract_docstring(code)
     random.shuffle(FEW_SHOTS)
-    buf = ""
+    buf = "<|begin_of_text|>"
     for few in FEW_SHOTS:
         buf += template_few_shot(*few)
-    buf += f"""<issue_start>username_0: I have a function in Python and I'd like someone to check my description of this function.
+    buf += f"""<|start_header_id|>user<|end_header_id|>I have a function in Python and I'd like someone to check my description of this function.
 I'm doing this so that I can write a good docstring for this function.
 
 Here is the code for the function:
@@ -201,7 +201,7 @@ Here is my description of this program:
 Do not attempt to execute the function or to judge its correctness.
 Answer with "Yes" or "No" depending on if my description has enough information alone to re-implement the function.
 Also, answer with "No" if the description does not match the function.
-Upvotes: 100<issue_comment>username_1: Sure, no problem. I will be able to help.
+Upvotes: 100<|end_header_id|><|eot_id|><|start_header_id|>assistant<|end_header_id|>Sure, no problem. I will be able to help.
 My answer is:"""
     return buf
 
