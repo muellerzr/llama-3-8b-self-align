@@ -11,8 +11,8 @@ import random
 parser = argparse.ArgumentParser()
 parser.add_argument('--dataset', type=str, required=True)
 parser.add_argument('--model', type=str,
-                    default="bigcode/starcoder2-15b")
-parser.add_argument('--batch-size', type=int, default=512)
+                    default="llama3-8b")
+parser.add_argument('--batch-size', type=int, default=32)
 parser.add_argument('--sample-size', type=int, default=None)
 parser.add_argument('--num-gpus', type=int, default=1)
 parser.add_argument('--content_col', type=str, default="content")
@@ -223,7 +223,10 @@ def chunkify(lst, n):
     return chunks
 
 
-dataset = datasets.load_dataset(args.dataset, split="train")
+dataset = datasets.load_dataset(
+    args.dataset, 
+    split="train"
+)
 print(f"Loaded {len(dataset)} examples. Running pre-filtering...")
 
 BAD_WORDS = ["todo", "fixme", "bug"]
@@ -350,7 +353,7 @@ for ex in tqdm(dataset, total=len(dataset), desc="Generating prompts"):
 responses = []
 for chunk in tqdm(chunkify(prompts, args.batch_size), desc="Generating responses"):
     outs = model.generate(chunk, SamplingParams(
-        temperature=0.1, stop="\n", max_tokens=5))
+        temperature=0.0, stop="\n", max_tokens=5))
     contents = [o.outputs[0].text for o in outs]
     for c in contents:
         yes_count = c.lower().count("yes")
@@ -367,4 +370,6 @@ for chunk in tqdm(chunkify(prompts, args.batch_size), desc="Generating responses
 new_ds = dataset.filter(  # horrible hack!
     lambda ex, i: responses[i] and "def dummy()" not in ex[args.content_col], with_indices=True)
 print(f"Filtered {len(dataset) - len(new_ds)} examples")
-new_ds.push_to_hub(args.push, private=True)
+new_ds.push_to_hub(
+    args.push, private=True, split="train",
+)
