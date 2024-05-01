@@ -350,7 +350,7 @@ for ex in tqdm(dataset, total=len(dataset), desc="Generating prompts"):
 responses = []
 for chunk in tqdm(chunkify(prompts, args.batch_size), desc="Generating responses"):
     outs = model.generate(chunk, SamplingParams(
-        temperature=0.0, stop="\n", max_tokens=5))
+        temperature=0.1, stop="\n", max_tokens=5))
     contents = [o.outputs[0].text for o in outs]
     for c in contents:
         yes_count = c.lower().count("yes")
