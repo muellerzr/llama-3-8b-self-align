@@ -306,7 +306,7 @@ def build_kwargs(instruct_mode: InstructMode, example: dict) -> dict[str, str]:
     if instruct_mode == "I->R":
         kwargs["instruction"] = example["instruction"]
     elif instruct_mode == "S->C":
-        kwargs["snippet"] = example["seed"]
+        kwargs["snippet"] = example["content"]
     elif instruct_mode == "C->I":
         lang = example.get("data_dir", "dummy_key_not_in_example")
         language = LANGUAGE_MAP.get(lang, "Python")
@@ -343,10 +343,10 @@ async def main():
         split="train",
         num_proc=star_align.utils.N_CORES,
     )
-    id_key = "seed"
+    id_key = "content"
     assert len(set(d[id_key] for d in raw_dataset)) == len(
         raw_dataset
-    ), "Duplicate seeds appear in the dataset"
+    ), "Duplicate contents appear in the dataset"
 
     # Every run should produce the same data as long as the default params are not changed
     start_index = args.seed_code_start_index

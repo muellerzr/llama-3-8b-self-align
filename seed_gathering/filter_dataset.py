@@ -224,8 +224,8 @@ def chunkify(lst, n):
 
 
 dataset = datasets.load_dataset(
-    args.dataset, 
-    split="train"
+    args.dataset,
+    split="train[0:100]"
 )
 print(f"Loaded {len(dataset)} examples. Running pre-filtering...")
 
@@ -371,5 +371,5 @@ new_ds = dataset.filter(  # horrible hack!
     lambda ex, i: responses[i] and "def dummy()" not in ex[args.content_col], with_indices=True)
 print(f"Filtered {len(dataset) - len(new_ds)} examples")
 new_ds.push_to_hub(
-    args.push, private=True, split="train",
+    args.push, private=True, split="train", branch="baseline",
 )

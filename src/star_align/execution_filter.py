@@ -71,7 +71,7 @@ def containerized_run(item):
     from code_exec_server.code_exec_reqs import exec_test
 
     idx, result, code, srv = item
-    passed, _ = exec_test(srv, code, "", timeout=10)
+    passed, _ = exec_test(srv, code, "", timeout=6)
     return (idx, result) if passed else None
 
 
@@ -115,7 +115,7 @@ def main(
             cached_data = [json.loads(line) for line in f if line.strip()]
         # instruction -> set[response]
         hit_code = set[str]()
-        for item in tqdm(cached_data):
+        for item in cached_data:
             code = extract_code(item["response"])
             hit_code.add(code)
 
@@ -124,7 +124,7 @@ def main(
 
     print("Container server:", container_server)
 
-    for idx, item in enumerate(tqdm(raw_data)):
+    for idx, item in enumerate(raw_data):
         # passing_results = []
         if "parsing_result" not in item:
             code = extract_code(item["response"])
@@ -144,7 +144,7 @@ def main(
     # Split cached/un-cached data
     active_tasks = []
     cached_tasks = []
-    for task in tqdm(all_tasks):
+    for task in all_tasks:
         _, _, code, _ = task
         if cache_path is not None and code in hit_code:
             cached_tasks.append(task)
@@ -167,19 +167,12 @@ def main(
     run_func = containerized_run if container_server else fork_run
 
     nfails = 0
-    tasks_chunks = chunked(active_tasks, 10000)
+    tasks_chunks = chunked(active_tasks, os.cpu_count())
     with open(result_path, "a") as f:
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             for chunked_tasks in tqdm(tasks_chunks):
                 futures = [executor.submit(run_func, task) for task in chunked_tasks]
-                # for idx, presults in tqdm(tasks):
-                #     futures = [
-                #         executor.submit(fork_run, (i, pres))
-                #         for i, pres in enumerate(presults)
-                #     ]
-                #     passed_indices = []
-                # NOTE: futures do not return in the same order as before
-                for future in tqdm(as_completed(futures), total=len(futures)):
+                for future in tqdm(as_completed(futures), total=len(futures), leave=False):
                     try:
                         future_result = future.result()
                         if future_result is None:
@@ -196,10 +189,6 @@ def main(
                     except Exception:
                         nfails += 1
                         continue
-                # if passed_indices:
-                #     item = data[idx]
-                #     item["parsing_result"] = [presults[i] for i in passed_indices]
-                #     f.write(json.dumps(item) + "\n")
 
     print(f"Uncompilable: {uncompilable}")
     print(f"Failed: {nfails}")
